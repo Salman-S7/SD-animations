@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logic Analyzer</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #3b82f6;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        #app-container {
+            background: var(--card);
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            border-radius: 24px;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-header {
+            margin-bottom: 2rem;
+        }
+
+        .step-indicator {
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+            resize: none;
+            min-height: 100px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Results Screen */
+        .hidden { display: none; }
+        
+        .result-item {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--accent);
+        }
+
+        .result-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <!-- Input Section -->
+    <div id="input-section">
+        <div class="step-header">
+            <div class="step-indicator" id="step-count">Step 1 of 4</div>
+            <h2 id="step-title">Identify a System</h2>
+        </div>
+        
+        <textarea id="user-input" placeholder="e.g., A Solar Power Plant..."></textarea>
+        
+        <button id="next-btn">Continue</button>
+    </div>
+
+    <!-- Summary Section -->
+    <div id="summary-section" class="hidden fade-in">
+        <h2 style="color: var(--success); margin-bottom: 1.5rem;">Logic Analysis Complete</h2>
+        <div id="summary-content"></div>
+        <button onclick="location.reload()" style="background: transparent; border: 1px solid #334155; margin-top: 1rem;">Restart Analysis</button>
+    </div>
+</div>
+
+<script>
+    const steps = [
+        { title: "Identify the System", label: "System Name", placeholder: "Name a system you see right now..." },
+        { title: "Define the Purpose", label: "Purpose", placeholder: "What is the primary goal of this system?" },
+        { title: "List the Core Parts", label: "Internal Parts", placeholder: "What key components are inside this system?" },
+        { title: "Explain a Connection", label: "Logic/Connection", placeholder: "How do the parts work together to achieve the purpose?" }
+    ];
+
+    let currentStep = 0;
+    const userData = [];
+
+    const inputField = document.getElementById('user-input');
+    const titleField = document.getElementById('step-title');
+    const countField = document.getElementById('step-count');
+    const nextBtn = document.getElementById('next-btn');
+    const inputSection = document.getElementById('input-section');
+    const summarySection = document.getElementById('summary-section');
+    const summaryContent = document.getElementById('summary-content');
+
+    nextBtn.addEventListener('click', () => {
+        const val = inputField.value.trim();
+        if (!val) return;
+
+        // Save data
+        userData.push({ label: steps[currentStep].label, value: val });
+
+        if (currentStep < steps.length - 1) {
+            // Move to next step
+            currentStep++;
+            updateUI();
+        } else {
+            // Show summary
+            showSummary();
+        }
+    });
+
+    function updateUI() {
+        inputField.value = '';
+        inputField.placeholder = steps[currentStep].placeholder;
+        titleField.innerText = steps[currentStep].title;
+        countField.innerText = `Step ${currentStep + 1} of 4`;
+        
+        // Simple animation trigger
+        inputSection.classList.remove('fade-in');
+        void inputSection.offsetWidth; // trigger reflow
+        inputSection.classList.add('fade-in');
+    }
+
+    function showSummary() {
+        inputSection.classList.add('hidden');
+        summarySection.classList.remove('hidden');
+        
+        summaryContent.innerHTML = userData.map(item => `
+            <div class="result-item">
+                <span class="result-label">${item.label}</span>
+                <strong>${item.value}</strong>
+            </div>
+        `).join('');
+    }
+</script>
+
+</body>
+</html>
